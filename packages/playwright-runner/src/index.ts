@@ -34,3 +34,4 @@ const env = new Environment<{page: Page}, {browser: Browser}>({
 export const extend = env.extend.bind(env);
 export const test = env.test.bind(env);
 export const it = env.it.bind(env);
+export {describe} from 'describers';
