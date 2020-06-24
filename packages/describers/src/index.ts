@@ -1,3 +1,5 @@
+import {Runner} from './runner';
+
 type UserCallback<T = void> = (state: T) => (void | Promise<void>);
 type State = {[key: string]: any};
 
@@ -41,7 +43,7 @@ class Suite {
   constructor(name: string, parent: Suite | null = null, callback: UserCallback | null = null) {
     this.name = name;
     this.parentSuite = parent;
-    this._callback = callback;
+    this._callback = callback || (() => void 0);
 
     if (parent)
       parent.children.push(this);
@@ -329,24 +331,29 @@ export class Environment<EachState, AllState, InitialState = void> {
 }
 
 export const describe: Describe & {only: Describe} = (callbackOrName: string|UserCallback, callback?: UserCallback) => {
-  createSuite(callbackOrName as any, callback as any);
+  _createSuite(callbackOrName as any, callback as any);
 }
 
 export const fdescribe : Describe = (callbackOrName: string|UserCallback, callback?: UserCallback) => {
-  const suite = createSuite(callbackOrName as any, callback as any);
+  const suite = _createSuite(callbackOrName as any, callback as any);
   suite.focused = true;
 }
 describe.only = fdescribe;
 
 export const xdescribe : Describe = (callbackOrName: string|UserCallback, callback?: UserCallback) => {
-  const suite = createSuite(callbackOrName as any, callback as any);
+  const suite = _createSuite(callbackOrName as any, callback as any);
   suite.skipped = true;
 }
-export const createSuite: Describe<Suite> = (callbackOrName: string|UserCallback, callback?: UserCallback) => {
+const _createSuite: Describe<Suite> = (callbackOrName: string|UserCallback, callback?: UserCallback) => {
   const name = callback ? callbackOrName as string : '';
   if (!callback)
     callback = callbackOrName as UserCallback;
   return new Suite(name, currentSuite, callback);
+}
+
+export const createSuite: Describe<Suite> = (callbackOrName: string|UserCallback, callback?: UserCallback) => {
+  useDefaultRunner = false;
+  return _createSuite(callbackOrName as any, callback as any);
 }
 
 export function it(name: string, callback: UserCallback<State>) {
@@ -358,6 +365,13 @@ export function fit(name: string, callback: UserCallback<State>) {
   test.focused = true;
 }
 it.only = fit;
+it.beforeEach = beforeEach;
+it.beforeAll = beforeAll;
+it.afterEach = afterEach;
+it.afterAll = afterAll;
+it.describe = describe;
+
+export const test = it;
 
 export function xit(name: string, callback: UserCallback<State>) {
   const test = new Test(name, callback);
@@ -389,5 +403,11 @@ export function afterAll(callback: UserCallback<State>) {
 
 const rootSuite = new Suite('', null);
 let currentSuite = rootSuite;
-
+let useDefaultRunner = true;
+setImmediate(async () => {
+  if (useDefaultRunner) {
+    const runner = new Runner(rootSuite);
+    await runner.run();
+  }
+});
 export type {Test};
