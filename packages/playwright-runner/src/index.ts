@@ -1,5 +1,5 @@
 import {Environment} from 'describers';
-import {chromium, webkit, firefox, Page, Browser} from 'playwright';
+import {chromium, webkit, firefox, Page, Browser} from '/home/joel/playwright';
 
 function valueFromEnv<T>(name: string, defaultValue: T) : T {
   if (!(name in process.env))
@@ -14,7 +14,9 @@ const env = new Environment<{page: Page}, {browser: Browser}>({
   async beforeAll() {
     const browser = await ({chromium, webkit, firefox})[browserName].launch({
       headless,
-      slowMo: headless ? 0 : 100
+      slowMo: headless ? 0 : 100,
+      showKeyboardIndicator: !headless,
+      showMouseIndicator: !headless,
     });
     return {browser};
   },
