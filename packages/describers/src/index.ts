@@ -263,6 +263,7 @@ type Callback<Input, Output> = (input: Input) => Promise<Output>;
 
 export class Environment<EachState, AllState, InitialState = void> {
   public it: (name: string, callback: (state: EachState & AllState) => (void|Promise<void>)) => void;
+  public test: (name: string, callback: (state: EachState & AllState) => (void|Promise<void>)) => void;
   constructor(
     private hooks: {
       beforeAll: Callback<InitialState, AllState>;
@@ -289,7 +290,8 @@ export class Environment<EachState, AllState, InitialState = void> {
         if (!success)
           throw error;
       });
-    }
+    };
+    this.test = this.it;
   }
 
   extend<NewEachState=EachState, NewAllState=AllState>(hooks: {
