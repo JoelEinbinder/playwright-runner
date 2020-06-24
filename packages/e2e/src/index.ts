@@ -110,10 +110,16 @@ async function listTestsInternal(options: {path: string, rootDir: string}, requi
   installGlobals();
   const suite = createSuite(async () => {
     beforeEach(async state => {
+      if (state.page) {
+        state.custom = true;
+        return;
+      }
       state.context = await (await ensureBrowserForName(state.browserName)).newContext();
       state.page = await state.context.newPage();
     });
     afterEach(async state => {
+      if (state.custom)
+        return;
       await state.context.close();
       delete state.page;
       delete state.context;
